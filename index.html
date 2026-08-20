@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rodízio de Oficina - Diagnóstico e Revisão</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --diag-color: #f59e0b;
+      --rev-color: #10b981;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 24px 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .card h2 {
+      font-size: 1.15rem;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Formulário de Ação */
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .action-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .action-box {
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .action-box.diag { border-color: var(--diag-color); }
+    .action-box.rev { border-color: var(--rev-color); }
+
+    .badge-next {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .badge-next strong {
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .btn:hover { opacity: 0.9; }
+
+    .btn-diag {
+      background-color: var(--diag-color);
+      color: #000;
+    }
+
+    .btn-rev {
+      background-color: var(--rev-color);
+      color: #000;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .input-group input {
+      flex: 1;
+      padding: 8px 12px;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: #fff;
+    }
+
+    /* Tabela */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+    }
+
+    .num-pill {
+      display: inline-block;
+      min-width: 28px;
+      text-align: center;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .pill-diag { background: rgba(245, 158, 11, 0.15); color: var(--diag-color); }
+    .pill-rev { background: rgba(16, 185, 129, 0.15); color: var(--rev-color); }
+    .pill-total { background: #334155; color: #fff; }
+
+    /* Histórico */
+    .history-list {
+      list-style: none;
+      max-height: 200px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0f172a;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+    .btn-reset {
+      background: transparent;
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Rodízio de Agendamento da Oficina</h1>
+    <p>Distribuição automática e equilibrada de Diagnósticos e Revisões</p>
+  </header>
+
+  <div class="card">
+    <h2>Novo Agendamento</h2>
+    <div class="input-group">
+      <input type="text" id="osInfo" placeholder="Identificação da O.S. ou Placa (Opcional)">
+    </div>
+    <div class="action-grid">
+      <div class="action-box diag">
+        <div>
+          <h3>Diagnóstico</h3>
+          <p class="badge-next">Próximo da fila: <strong id="nextDiagName">-</strong></p>
+        </div>
+        <button class="btn btn-diag" onclick="agendar('diag')">Atribuir Diagnóstico</button>
+      </div>
+
+      <div class="action-box rev">
+        <div>
+          <h3>Revisão</h3>
+          <p class="badge-next">Próximo da fila: <strong id="nextRevName">-</strong></p>
+        </div>
+        <button class="btn btn-rev" onclick="agendar('rev')">Atribuir Revisão</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>
+      Quadro de Contagem
+      <button class="btn-reset" onclick="zerarContadores()">Zerar Contagens</button>
+    </h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Mecânico</th>
+          <th style="text-align: center;">Diagnósticos</th>
+          <th style="text-align: center;">Revisões</th>
+          <th style="text-align: center;">Total Geral</th>
+        </tr>
+      </thead>
+      <tbody id="mecanicosTbody"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Histórico Recente</h2>
+    <ul class="history-list" id="historyList"></ul>
+  </div>
+</div>
+
+<script>
+  const MECANICOS_INICIAIS = [
+    "Orlando",
+    "Francisco",
+    "Cristiano",
+    "Sandro",
+    "Joao carlos",
+    "Tassio"
+  ];
+
+  let state = {
+    mecanicos: [],
+    historico: []
+  };
+
+  function inicializar() {
+    const salvo = localStorage.getItem("oficina_rodizio_state");
+    if (salvo) {
+      state = JSON.parse(salvo);
+    } else {
+      state.mecanicos = MECANICOS_INICIAIS.map((nome, index) => ({
+        id: index + 1,
+        nome: nome,
+        diagCount: 0,
+        revCount: 0,
+        lastDiagOrder: 0,
+        lastRevOrder: 0
+      }));
+      salvar();
+    }
+    renderizar();
+  }
+
+  function salvar() {
+    localStorage.setItem("oficina_rodizio_state", JSON.stringify(state));
+  }
+
+  function getProximo(tipo) {
+    const campoContagem = tipo === 'diag' ? 'diagCount' : 'revCount';
+    const campoOrdem = tipo === 'diag' ? 'lastDiagOrder' : 'lastRevOrder';
+
+    // Ordena: 1º menor contagem daquele serviço, 2º quem foi agendado há mais tempo
+    const ordenados = [...state.mecanicos].sort((a, b) => {
+      if (a[campoContagem] !== b[campoContagem]) {
+        return a[campoContagem] - b[campoContagem];
+      }
+      return a[campoOrdem] - b[campoOrdem];
+    });
+
+    return ordenados[0];
+  }
+
+  function agendar(tipo) {
+    const inputOS = document.getElementById("osInfo");
+    const osTexto = inputOS.value.trim();
+    const escolhido = getProximo(tipo);
+    const orderTimestamp = Date.now();
+
+    if (tipo === 'diag') {
+      escolhido.diagCount += 1;
+      escolhido.lastDiagOrder = orderTimestamp;
+    } else {
+      escolhido.revCount += 1;
+      escolhido.lastRevOrder = orderTimestamp;
+    }
+
+    state.historico.unshift({
+      id: Date.now(),
+      mecanico: escolhido.nome,
+      tipo: tipo === 'diag' ? 'Diagnóstico' : 'Revisão',
+      info: osTexto || 'Sem identificação',
+      hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    });
+
+    inputOS.value = "";
+    salvar();
+    renderizar();
+  }
+
+  function zerarContadores() {
+    if (!confirm("Tem certeza que deseja zerar todas as contagens e o histórico?")) return;
+    
+    state.mecanicos.forEach(m => {
+      m.diagCount = 0;
+      m.revCount = 0;
+      m.lastDiagOrder = 0;
+      m.lastRevOrder = 0;
+    });
+    state.historico = [];
+    salvar();
+    renderizar();
+  }
+
+  function renderizar() {
+    // 1. Atualizar indicadores dos próximos da fila
+    const proxDiag = getProximo('diag');
+    const proxRev = getProximo('rev');
+    document.getElementById("nextDiagName").innerText = proxDiag ? proxDiag.nome : "-";
+    document.getElementById("nextRevName").innerText = proxRev ? proxRev.nome : "-";
+
+    // 2. Tabela de Mecânicos
+    const tbody = document.getElementById("mecanicosTbody");
+    tbody.innerHTML = "";
+    state.mecanicos.forEach(m => {
+      const total = m.diagCount + m.revCount;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><strong>${m.nome}</strong></td>
+        <td style="text-align: center;"><span class="num-pill pill-diag">${m.diagCount}</span></td>
+        <td style="text-align: center;"><span class="num-pill pill-rev">${m.revCount}</span></td>
+        <td style="text-align: center;"><span class="num-pill pill-total">${total}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // 3. Histórico
+    const list = document.getElementById("historyList");
+    list.innerHTML = "";
+    if (state.historico.length === 0) {
+      list.innerHTML = `<li style="color: var(--text-muted); font-size: 0.85rem;">Nenhum agendamento registrado ainda.</li>`;
+    } else {
+      state.historico.slice(0, 15).forEach(item => {
+        const li = document.createElement("li");
+        li.className = "history-item";
+        li.innerHTML = `
+          <span><strong>${item.mecanico}</strong> recebeu <em>${item.tipo}</em> (${item.info})</span>
+          <span style="color: var(--text-muted);">${item.hora}</span>
+        `;
+        list.appendChild(li);
+      });
+    }
+  }
+
+  inicializar();
+</script>
+</body>
+</html>
