@@ -688,60 +688,72 @@
   // Modal state
   let modalTarget = null; // { mecanico, horario }
 
-  function inicializar() {
-    const salvo = localStorage.getItem("oficina_grade_v3");
-    if (salvo) {
-      state = JSON.parse(salvo);
-      // Migrar campos que podem não existir em dados antigos
-      if (!state.presenca) state.presenca = {};
-      if (!state.ids) state.ids = {};
-      if (!state.dataGrade) state.dataGrade = getHoje();
-      MECANICOS.forEach(nome => {
-        if (state.presenca[nome] === undefined) state.presenca[nome] = true;
-        if (!state.ids[nome]) state.ids[nome] = {};
-        // Migrar lastOrder → lastDiagOrder + lastRevOrder
-        if (state.acumulado[nome] && state.acumulado[nome].lastOrder !== undefined) {
-          const old = state.acumulado[nome].lastOrder;
-          if (state.acumulado[nome].lastDiagOrder === undefined) state.acumulado[nome].lastDiagOrder = old;
-          if (state.acumulado[nome].lastRevOrder === undefined) state.acumulado[nome].lastRevOrder = old;
-          delete state.acumulado[nome].lastOrder;
-        }
-        if (state.acumulado[nome] && state.acumulado[nome].lastDiagOrder === undefined) state.acumulado[nome].lastDiagOrder = 0;
-        if (state.acumulado[nome] && state.acumulado[nome].lastRevOrder === undefined) state.acumulado[nome].lastRevOrder = 0;
-      });
-    } else {
-      // Tentar migrar dados da v2
-      const salvoV2 = localStorage.getItem("oficina_grade_v2");
-      if (salvoV2) {
-        const stateV2 = JSON.parse(salvoV2);
-        state.grade = stateV2.grade || {};
-        state.acumulado = stateV2.acumulado || {};
-        MECANICOS.forEach(nome => {
-          state.presenca[nome] = true;
-          state.ids[nome] = {};
-          if (!state.grade[nome]) {
-            state.grade[nome] = { "08:00": null, "10:00": null, "14:00": null, "16:00": null };
-          }
-          if (!state.acumulado[nome]) {
-            state.acumulado[nome] = { diag: 0, rev: 0, lastDiagOrder: 0, lastRevOrder: 0 };
-          }
-        });
-        state.dataGrade = getHoje();
-      } else {
-        MECANICOS.forEach(nome => {
-          state.grade[nome] = { "08:00": null, "10:00": null, "14:00": null, "16:00": null };
-          state.acumulado[nome] = { diag: 0, rev: 0, lastDiagOrder: 0, lastRevOrder: 0 };
-          state.presenca[nome] = true;
-          state.ids[nome] = {};
-        });
-        state.dataGrade = getHoje();
+  function normalizarState() {
+    if (!state || typeof state !== 'object') state = {};
+    if (!state.grade || typeof state.grade !== 'object') state.grade = {};
+    if (!state.acumulado || typeof state.acumulado !== 'object') state.acumulado = {};
+    if (!state.presenca || typeof state.presenca !== 'object') state.presenca = {};
+    if (!state.ids || typeof state.ids !== 'object') state.ids = {};
+    if (!state.dataGrade) state.dataGrade = getHoje();
+
+    MECANICOS.forEach(nome => {
+      // 1. Grade
+      if (!state.grade[nome] || typeof state.grade[nome] !== 'object') {
+        state.grade[nome] = {};
       }
-      salvar();
+      HORARIOS.forEach(hora => {
+        const val = state.grade[nome][hora];
+        if (val !== 'diag' && val !== 'rev') {
+          state.grade[nome][hora] = null;
+        }
+      });
+
+      // 2. Presença
+      if (state.presenca[nome] === undefined) state.presenca[nome] = true;
+
+      // 3. IDs
+      if (!state.ids[nome] || typeof state.ids[nome] !== 'object') state.ids[nome] = {};
+
+      // 4. Acumulado
+      if (!state.acumulado[nome] || typeof state.acumulado[nome] !== 'object') {
+        state.acumulado[nome] = { diag: 0, rev: 0, lastDiagOrder: 0, lastRevOrder: 0 };
+      }
+      if (typeof state.acumulado[nome].diag !== 'number') state.acumulado[nome].diag = 0;
+      if (typeof state.acumulado[nome].rev !== 'number') state.acumulado[nome].rev = 0;
+
+      // Migração de lastOrder antigo se existir
+      if (state.acumulado[nome].lastOrder !== undefined) {
+        const old = state.acumulado[nome].lastOrder;
+        if (state.acumulado[nome].lastDiagOrder === undefined) state.acumulado[nome].lastDiagOrder = old;
+        if (state.acumulado[nome].lastRevOrder === undefined) state.acumulado[nome].lastRevOrder = old;
+        delete state.acumulado[nome].lastOrder;
+      }
+      if (typeof state.acumulado[nome].lastDiagOrder !== 'number') state.acumulado[nome].lastDiagOrder = 0;
+      if (typeof state.acumulado[nome].lastRevOrder !== 'number') state.acumulado[nome].lastRevOrder = 0;
+    });
+  }
+
+  function inicializar() {
+    try {
+      const salvo = localStorage.getItem("oficina_grade_v3");
+      if (salvo) {
+        state = JSON.parse(salvo);
+      } else {
+        const salvoV2 = localStorage.getItem("oficina_grade_v2");
+        if (salvoV2) {
+          const stateV2 = JSON.parse(salvoV2);
+          state.grade = stateV2.grade || {};
+          state.acumulado = stateV2.acumulado || {};
+        }
+      }
+    } catch (e) {
+      console.warn("Erro ao ler localStorage, reiniciando dados padrão:", e);
+      state = {};
     }
 
-    // Auto-reset: se a data da grade é diferente de hoje, limpar grade (manter acumulados)
+    normalizarState();
     verificarResetDiario();
-
+    salvar();
     renderizar();
   }
 
@@ -764,14 +776,19 @@
   }
 
   function salvar() {
-    localStorage.setItem("oficina_grade_v3", JSON.stringify(state));
+    try {
+      localStorage.setItem("oficina_grade_v3", JSON.stringify(state));
+    } catch (e) {
+      console.warn("Erro ao salvar no localStorage:", e);
+    }
   }
 
   // Conta quantos serviços o mecânico já tem na grade de HOJE
   function contarServicosHoje(mecanico) {
     let total = 0;
     for (const hora of HORARIOS) {
-      if (state.grade[mecanico][hora] !== null) total++;
+      const status = state.grade?.[mecanico]?.[hora];
+      if (status === 'diag' || status === 'rev') total++;
     }
     return total;
   }
@@ -786,9 +803,10 @@
     const lastOrderKey = tipo === 'diag' ? 'lastDiagOrder' : 'lastRevOrder';
 
     for (const hora of HORARIOS) {
-      const mecanicosLivresNessaHora = MECANICOS.filter(nome =>
-        state.grade[nome][hora] === null && state.presenca[nome] !== false
-      );
+      const mecanicosLivresNessaHora = MECANICOS.filter(nome => {
+        const status = state.grade?.[nome]?.[hora];
+        return (status !== 'diag' && status !== 'rev') && state.presenca?.[nome] !== false;
+      });
 
       if (mecanicosLivresNessaHora.length > 0) {
         mecanicosLivresNessaHora.sort((a, b) => {
@@ -798,17 +816,17 @@
           if (diaA !== diaB) return diaA - diaB;
 
           // 2º Quem tem menos do TIPO solicitado (histórico)
-          const tipoA = state.acumulado[a][tipo];
-          const tipoB = state.acumulado[b][tipo];
+          const tipoA = state.acumulado?.[a]?.[tipo] || 0;
+          const tipoB = state.acumulado?.[b]?.[tipo] || 0;
           if (tipoA !== tipoB) return tipoA - tipoB;
 
           // 3º Quem tem menos TOTAL (diag + rev) no histórico
-          const totalA = state.acumulado[a].diag + state.acumulado[a].rev;
-          const totalB = state.acumulado[b].diag + state.acumulado[b].rev;
+          const totalA = (state.acumulado?.[a]?.diag || 0) + (state.acumulado?.[a]?.rev || 0);
+          const totalB = (state.acumulado?.[b]?.diag || 0) + (state.acumulado?.[b]?.rev || 0);
           if (totalA !== totalB) return totalA - totalB;
 
           // 4º FIFO separado por tipo (quem foi agendado há mais tempo nesse tipo)
-          return (state.acumulado[a][lastOrderKey] || 0) - (state.acumulado[b][lastOrderKey] || 0);
+          return (state.acumulado?.[a]?.[lastOrderKey] || 0) - (state.acumulado?.[b]?.[lastOrderKey] || 0);
         });
 
         return {
@@ -930,7 +948,8 @@
 
   // Permite clicar na célula individual para ajuste manual rápido
   function alternarSlot(mecanico, horario) {
-    const atual = state.grade[mecanico][horario];
+    const raw = state.grade?.[mecanico]?.[horario];
+    const atual = (raw === 'diag' || raw === 'rev') ? raw : null;
     let novo = null;
 
     pushUndo(
@@ -938,25 +957,31 @@
       mecanico, horario, atual, null // estadoNovo será definido abaixo
     );
 
+    if (!state.acumulado[mecanico]) {
+      state.acumulado[mecanico] = { diag: 0, rev: 0, lastDiagOrder: 0, lastRevOrder: 0 };
+    }
+
     if (atual === null) {
       novo = 'diag';
-      state.acumulado[mecanico].diag += 1;
+      state.acumulado[mecanico].diag = (state.acumulado[mecanico].diag || 0) + 1;
       // Corrigir o estadoNovo no undoStack
       undoStack[undoStack.length - 1].estadoNovo = 'diag';
     } else if (atual === 'diag') {
       novo = 'rev';
-      state.acumulado[mecanico].diag = Math.max(0, state.acumulado[mecanico].diag - 1);
-      state.acumulado[mecanico].rev += 1;
+      state.acumulado[mecanico].diag = Math.max(0, (state.acumulado[mecanico].diag || 0) - 1);
+      state.acumulado[mecanico].rev = (state.acumulado[mecanico].rev || 0) + 1;
       undoStack[undoStack.length - 1].estadoNovo = 'rev';
     } else if (atual === 'rev') {
       novo = null;
-      state.acumulado[mecanico].rev = Math.max(0, state.acumulado[mecanico].rev - 1);
+      state.acumulado[mecanico].rev = Math.max(0, (state.acumulado[mecanico].rev || 0) - 1);
       // Limpar ID ao liberar
-      if (state.ids[mecanico]) delete state.ids[mecanico][horario];
+      if (state.ids?.[mecanico]) delete state.ids[mecanico][horario];
       undoStack[undoStack.length - 1].estadoNovo = null;
     }
 
+    if (!state.grade[mecanico]) state.grade[mecanico] = {};
     state.grade[mecanico][horario] = novo;
+
     // Atualizar FIFO do tipo que foi atribuído
     if (novo === 'diag') {
       state.acumulado[mecanico].lastDiagOrder = Date.now();
@@ -971,7 +996,8 @@
   // Clique direito (ou long press) → limpar slot direto para "Livre"
   function limparSlot(e, mecanico, horario) {
     e.preventDefault();
-    const atual = state.grade[mecanico][horario];
+    const raw = state.grade?.[mecanico]?.[horario];
+    const atual = (raw === 'diag' || raw === 'rev') ? raw : null;
     if (atual === null) return; // Já livre, nada a fazer
 
     pushUndo(
@@ -979,9 +1005,14 @@
       mecanico, horario, atual, null
     );
 
-    state.acumulado[mecanico][atual] = Math.max(0, state.acumulado[mecanico][atual] - 1);
+    if (!state.acumulado[mecanico]) {
+      state.acumulado[mecanico] = { diag: 0, rev: 0, lastDiagOrder: 0, lastRevOrder: 0 };
+    }
+    state.acumulado[mecanico][atual] = Math.max(0, (state.acumulado[mecanico][atual] || 0) - 1);
+
+    if (!state.grade[mecanico]) state.grade[mecanico] = {};
     state.grade[mecanico][horario] = null;
-    if (state.ids[mecanico]) delete state.ids[mecanico][horario];
+    if (state.ids?.[mecanico]) delete state.ids[mecanico][horario];
     // Não atualiza FIFO ao limpar — preserva a ordem original
 
     salvar();
@@ -991,6 +1022,7 @@
 
   // === TOGGLE PRESENÇA ===
   function togglePresenca(mecanico) {
+    if (!state.presenca) state.presenca = {};
     state.presenca[mecanico] = !state.presenca[mecanico];
     salvar();
     renderizar();
@@ -1000,14 +1032,15 @@
 
   // === MODAL DE IDENTIFICAÇÃO ===
   function abrirModalId(mecanico, horario) {
-    const status = state.grade[mecanico][horario];
+    const raw = state.grade?.[mecanico]?.[horario];
+    const status = (raw === 'diag' || raw === 'rev') ? raw : null;
     if (!status) return; // Só permite identificar slots ocupados
 
     modalTarget = { mecanico, horario };
     const tipo = status === 'diag' ? 'Diagnóstico' : 'Revisão';
     document.getElementById("modalTitle").textContent = `${mecanico} — ${horario} (${tipo})`;
     
-    const idAtual = (state.ids[mecanico] && state.ids[mecanico][horario]) || "";
+    const idAtual = (state.ids?.[mecanico] && state.ids[mecanico][horario]) || "";
     document.getElementById("modalInput").value = idAtual;
     document.getElementById("btnModalClear").style.display = idAtual ? "inline-block" : "none";
 
@@ -1023,6 +1056,7 @@
   function modalSalvar() {
     if (!modalTarget) return;
     const valor = document.getElementById("modalInput").value.trim();
+    if (!state.ids) state.ids = {};
     if (!state.ids[modalTarget.mecanico]) state.ids[modalTarget.mecanico] = {};
     
     if (valor) {
@@ -1038,7 +1072,7 @@
 
   function modalLimpar() {
     if (!modalTarget) return;
-    if (state.ids[modalTarget.mecanico]) {
+    if (state.ids?.[modalTarget.mecanico]) {
       delete state.ids[modalTarget.mecanico][modalTarget.horario];
     }
     salvar();
@@ -1054,14 +1088,15 @@
     let texto = `📅 *Escala Oficina — ${dataFormatada}*\n\n`;
 
     MECANICOS.forEach(nome => {
-      if (state.presenca[nome] === false) {
+      if (state.presenca?.[nome] === false) {
         texto += `• ~${nome}~ _(folga)_\n`;
         return;
       }
 
       const slots = HORARIOS.map(hora => {
-        const status = state.grade[nome][hora];
-        const id = (state.ids[nome] && state.ids[nome][hora]) ? ` (${state.ids[nome][hora]})` : "";
+        const raw = state.grade?.[nome]?.[hora];
+        const status = (raw === 'diag' || raw === 'rev') ? raw : null;
+        const id = (state.ids?.[nome] && state.ids[nome][hora]) ? ` (${state.ids[nome][hora]})` : "";
         if (status === 'diag') return `${hora.replace(':00','')}h Diag${id}`;
         if (status === 'rev') return `${hora.replace(':00','')}h Rev${id}`;
         return `${hora.replace(':00','')}h Livre`;
@@ -1203,7 +1238,8 @@
 
       let slotsHtml = "";
       HORARIOS.forEach(hora => {
-        const status = state.grade[mecanico][hora];
+        const raw = state.grade?.[mecanico]?.[hora];
+        const status = (raw === 'diag' || raw === 'rev') ? raw : null;
         let label = "Livre";
         let cssClass = "livre";
 
@@ -1231,7 +1267,7 @@
         }
 
         // ID opcional
-        const slotId = (state.ids[mecanico] && state.ids[mecanico][hora]) || "";
+        const slotId = (state.ids?.[mecanico] && state.ids[mecanico][hora]) || "";
         const idHtml = slotId ? `<span class="slot-id">${slotId}</span>` : "";
 
         // Eventos: clique esquerdo = alternar, clique direito = limpar, duplo clique = editar ID
