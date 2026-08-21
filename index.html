@@ -64,6 +64,12 @@
       color: var(--text);
     }
 
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     .capacity-badge {
       background: var(--card-bg);
       border: 1px solid var(--border);
@@ -73,6 +79,22 @@
       font-weight: 600;
       color: var(--text-muted);
     }
+
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      transition: background 0.15s ease;
+    }
+
+    .btn-icon:hover { background: #e2e8f0; }
 
     .card {
       background: var(--card-bg);
@@ -158,6 +180,15 @@
     .btn-diag { background: #d97706; }
     .btn-rev { background: #059669; }
 
+    .shortcut-hint {
+      font-size: 0.7rem;
+      background: rgba(255,255,255,0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
     .next-preview {
       font-size: 0.85rem;
       color: var(--text-muted);
@@ -197,13 +228,56 @@
       color: var(--text);
     }
 
+    /* MECÂNICO TOGGLE PRESENTE / AUSENTE */
+    .mecanico-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toggle-presenca {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid #cbd5e1;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .toggle-presenca.presente {
+      background: #22c55e;
+      border-color: #16a34a;
+    }
+
+    .toggle-presenca.ausente {
+      background: #e2e8f0;
+      border-color: #cbd5e1;
+    }
+
+    .mecanico-nome {
+      white-space: nowrap;
+    }
+
+    .mecanico-nome.ausente-text {
+      color: var(--text-muted);
+      text-decoration: line-through;
+    }
+
+    tr.mecanico-ausente {
+      opacity: 0.5;
+    }
+
     /* SLOTS */
     .slot-cell {
       padding: 6px;
     }
 
     .slot-badge {
-      display: block;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
       width: 100%;
       padding: 8px 4px;
       border-radius: 6px;
@@ -213,6 +287,7 @@
       border: 1px solid transparent;
       transition: all 0.15s ease;
       user-select: none;
+      position: relative;
     }
 
     .slot-badge.livre {
@@ -235,6 +310,38 @@
 
     .slot-badge:hover {
       filter: brightness(0.95);
+    }
+
+    /* HIGHLIGHT DO PRÓXIMO SLOT */
+    .slot-badge.next-diag {
+      box-shadow: 0 0 0 2px #d97706, 0 0 8px rgba(217, 119, 6, 0.3);
+      animation: pulse-diag 2s infinite;
+    }
+
+    .slot-badge.next-rev {
+      box-shadow: 0 0 0 2px #059669, 0 0 8px rgba(5, 150, 105, 0.3);
+      animation: pulse-rev 2s infinite;
+    }
+
+    @keyframes pulse-diag {
+      0%, 100% { box-shadow: 0 0 0 2px #d97706, 0 0 8px rgba(217, 119, 6, 0.3); }
+      50% { box-shadow: 0 0 0 2px #d97706, 0 0 14px rgba(217, 119, 6, 0.15); }
+    }
+
+    @keyframes pulse-rev {
+      0%, 100% { box-shadow: 0 0 0 2px #059669, 0 0 8px rgba(5, 150, 105, 0.3); }
+      50% { box-shadow: 0 0 0 2px #059669, 0 0 14px rgba(5, 150, 105, 0.15); }
+    }
+
+    /* ID / PLACA NO SLOT */
+    .slot-id {
+      font-size: 0.65rem;
+      font-weight: 700;
+      opacity: 0.8;
+      max-width: 80px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .pill-count {
@@ -269,6 +376,9 @@
       font-weight: 600;
       font-size: 0.85rem;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .btn-secondary:hover { background: #e2e8f0; }
@@ -290,6 +400,184 @@
       font-size: 0.8rem;
       color: var(--text-muted);
     }
+
+    /* TOAST NOTIFICATION */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .toast {
+      background: #1e293b;
+      color: #f1f5f9;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: toast-in 0.3s ease;
+      max-width: 420px;
+    }
+
+    .toast.toast-out {
+      animation: toast-out 0.3s ease forwards;
+    }
+
+    .toast .btn-undo {
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease;
+    }
+
+    .toast .btn-undo:hover { background: #2563eb; }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes toast-out {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(16px); }
+    }
+
+    /* MODAL DE IDENTIFICAÇÃO */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 900;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 24px;
+      width: 90%;
+      max-width: 360px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+      animation: modal-in 0.2s ease;
+    }
+
+    @keyframes modal-in {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-content h3 {
+      font-size: 1.1rem;
+      margin-bottom: 4px;
+    }
+
+    .modal-content p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .modal-content input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+      margin-bottom: 16px;
+    }
+
+    .modal-content input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .modal-buttons button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .modal-buttons .btn-modal-cancel {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+    }
+
+    .modal-buttons .btn-modal-save {
+      background: var(--primary);
+      border: none;
+      color: #fff;
+    }
+
+    .modal-buttons .btn-modal-clear {
+      background: #fee2e2;
+      border: 1px solid #fca5a5;
+      color: var(--danger);
+    }
+
+    /* MODO TV / FULLSCREEN */
+    body.fullscreen-mode {
+      padding: 32px;
+    }
+
+    body.fullscreen-mode .container {
+      max-width: 1400px;
+    }
+
+    body.fullscreen-mode table {
+      font-size: 1.1rem;
+    }
+
+    body.fullscreen-mode th, body.fullscreen-mode td {
+      padding: 16px 12px;
+    }
+
+    body.fullscreen-mode .slot-badge {
+      padding: 12px 6px;
+      font-size: 1rem;
+    }
+
+    body.fullscreen-mode header h1 {
+      font-size: 2rem;
+    }
+
+    /* FEEDBACK VISUAL PARA COPIAR */
+    .btn-secondary.copied {
+      background: #d1fae5;
+      border-color: #a7f3d0;
+      color: #047857;
+    }
   </style>
 </head>
 <body>
@@ -300,7 +588,10 @@
       <h1>Rodízio de Oficina</h1>
       <p style="color: var(--text-muted); font-size: 0.9rem;">4 horários diários por mecânico (08h, 10h, 14h, 16h)</p>
     </div>
-    <div class="capacity-badge" id="occupancyBadge">0 / 24 horários ocupados</div>
+    <div class="header-right">
+      <div class="capacity-badge" id="occupancyBadge">0 / 24 horários ocupados</div>
+      <button class="btn-icon" onclick="toggleFullscreen()" title="Modo TV / Tela Cheia">📺</button>
+    </div>
   </header>
 
   <!-- BOTÕES DE 1 CLIQUE -->
@@ -310,7 +601,7 @@
         <h2>+ Diagnóstico</h2>
         <span class="next-preview" id="previewDiag">Próximo: calculando...</span>
       </div>
-      <button class="btn-action btn-diag">Atribuir Próximo Diagnóstico</button>
+      <button class="btn-action btn-diag">Atribuir Próximo Diagnóstico <span class="shortcut-hint">D</span></button>
     </div>
 
     <div class="action-card rev" onclick="agendarAuto('rev')">
@@ -318,7 +609,7 @@
         <h2>+ Revisão</h2>
         <span class="next-preview" id="previewRev">Próximo: calculando...</span>
       </div>
-      <button class="btn-action btn-rev">Atribuir Próxima Revisão</button>
+      <button class="btn-action btn-rev">Atribuir Próxima Revisão <span class="shortcut-hint">R</span></button>
     </div>
   </div>
 
@@ -343,11 +634,29 @@
     </div>
 
     <div class="footer-actions">
-      <span class="instruction-hint">💡 Dica: você também pode clicar direto no horário de qualquer mecânico para alternar manualmente (Livre → Diag → Rev).</span>
-      <div style="display: flex; gap: 8px;">
+      <span class="instruction-hint">💡 Clique no slot para alternar · Clique direito para limpar · <strong>D</strong> / <strong>R</strong> = atalho · <strong>Z</strong> = desfazer</span>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn-secondary" id="btnCopiar" onclick="copiarEscala()">📋 Copiar p/ WhatsApp</button>
         <button class="btn-secondary" onclick="limparGrade()">Limpar Grade do Dia</button>
         <button class="btn-danger" onclick="zerarHistoricoCompleto()">Zerar Histórico Geral</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- MODAL DE IDENTIFICAÇÃO -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-content">
+    <h3 id="modalTitle">Identificação</h3>
+    <p id="modalSubtitle">Placa ou Nº da O.S. (opcional)</p>
+    <input type="text" id="modalInput" placeholder="Ex: ABC-1234 ou OS #102" maxlength="20" autocomplete="off">
+    <div class="modal-buttons">
+      <button class="btn-modal-clear" id="btnModalClear" onclick="modalLimpar()">Limpar</button>
+      <button class="btn-modal-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-modal-save" onclick="modalSalvar()">Salvar</button>
     </div>
   </div>
 </div>
@@ -366,35 +675,97 @@
 
   let state = {
     grade: {},
-    acumulado: {} // Mantém contagem histórica geral para garantir justiça a longo prazo
+    acumulado: {}, // Mantém contagem histórica geral para garantir justiça a longo prazo
+    presenca: {},   // true = presente, false = ausente/folga
+    ids: {},        // IDs opcionais (placa / OS) por mecânico+horário
+    dataGrade: null // Data em que a grade foi preenchida (para auto-reset)
   };
 
+  // Pilha de undo (última ação)
+  let undoStack = [];
+  let toastTimeout = null;
+
+  // Modal state
+  let modalTarget = null; // { mecanico, horario }
+
   function inicializar() {
-    const salvo = localStorage.getItem("oficina_grade_v2");
+    const salvo = localStorage.getItem("oficina_grade_v3");
     if (salvo) {
       state = JSON.parse(salvo);
-    } else {
+      // Migrar campos que podem não existir em dados antigos
+      if (!state.presenca) state.presenca = {};
+      if (!state.ids) state.ids = {};
+      if (!state.dataGrade) state.dataGrade = getHoje();
       MECANICOS.forEach(nome => {
-        state.grade[nome] = { "08:00": null, "10:00": null, "14:00": null, "16:00": null };
-        state.acumulado[nome] = { diag: 0, rev: 0, lastOrder: 0 };
+        if (state.presenca[nome] === undefined) state.presenca[nome] = true;
+        if (!state.ids[nome]) state.ids[nome] = {};
       });
+    } else {
+      // Tentar migrar dados da v2
+      const salvoV2 = localStorage.getItem("oficina_grade_v2");
+      if (salvoV2) {
+        const stateV2 = JSON.parse(salvoV2);
+        state.grade = stateV2.grade || {};
+        state.acumulado = stateV2.acumulado || {};
+        MECANICOS.forEach(nome => {
+          state.presenca[nome] = true;
+          state.ids[nome] = {};
+          if (!state.grade[nome]) {
+            state.grade[nome] = { "08:00": null, "10:00": null, "14:00": null, "16:00": null };
+          }
+          if (!state.acumulado[nome]) {
+            state.acumulado[nome] = { diag: 0, rev: 0, lastOrder: 0 };
+          }
+        });
+        state.dataGrade = getHoje();
+      } else {
+        MECANICOS.forEach(nome => {
+          state.grade[nome] = { "08:00": null, "10:00": null, "14:00": null, "16:00": null };
+          state.acumulado[nome] = { diag: 0, rev: 0, lastOrder: 0 };
+          state.presenca[nome] = true;
+          state.ids[nome] = {};
+        });
+        state.dataGrade = getHoje();
+      }
       salvar();
     }
+
+    // Auto-reset: se a data da grade é diferente de hoje, limpar grade (manter acumulados)
+    verificarResetDiario();
+
     renderizar();
   }
 
-  function salvar() {
-    localStorage.setItem("oficina_grade_v2", JSON.stringify(state));
+  function getHoje() {
+    return new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
   }
 
-  // Encontra o melhor horário e mecânico para o serviço
+  function verificarResetDiario() {
+    const hoje = getHoje();
+    if (state.dataGrade && state.dataGrade !== hoje) {
+      // Novo dia: limpar grade e IDs, preservar acumulados e presença
+      MECANICOS.forEach(nome => {
+        state.grade[nome] = { "08:00": null, "10:00": null, "14:00": null, "16:00": null };
+        state.ids[nome] = {};
+      });
+      state.dataGrade = hoje;
+      undoStack = [];
+      salvar();
+    }
+  }
+
+  function salvar() {
+    localStorage.setItem("oficina_grade_v3", JSON.stringify(state));
+  }
+
+  // Encontra o melhor horário e mecânico para o serviço (pula ausentes)
   function encontrarProximo(tipo) {
-    // 1. Encontrar o primeiro horário que tenha pelo menos 1 mecânico livre
     for (const hora of HORARIOS) {
-      const mecanicosLivresNessaHora = MECANICOS.filter(nome => state.grade[nome][hora] === null);
+      const mecanicosLivresNessaHora = MECANICOS.filter(nome =>
+        state.grade[nome][hora] === null && state.presenca[nome] !== false
+      );
 
       if (mecanicosLivresNessaHora.length > 0) {
-        // 2. Entre os mecânicos livres nesse horário, escolher quem tem MENOS serviços do tipo
         mecanicosLivresNessaHora.sort((a, b) => {
           const countA = state.acumulado[a][tipo];
           const countB = state.acumulado[b][tipo];
@@ -410,15 +781,24 @@
         };
       }
     }
-    return null; // Todos os 24 horários preenchidos
+    return null;
   }
 
   function agendarAuto(tipo) {
     const prox = encontrarProximo(tipo);
     if (!prox) {
-      alert("Todos os 24 horários do dia já estão preenchidos!");
+      alert("Todos os horários disponíveis já estão preenchidos!");
       return;
     }
+
+    // Salvar estado para undo ANTES de alterar
+    pushUndo(
+      `${tipo === 'diag' ? 'Diagnóstico' : 'Revisão'} → ${prox.mecanico} (${prox.horario})`,
+      prox.mecanico,
+      prox.horario,
+      null, // estado anterior do slot
+      tipo  // novo estado
+    );
 
     state.grade[prox.mecanico][prox.horario] = tipo;
     state.acumulado[prox.mecanico][tipo] += 1;
@@ -426,6 +806,89 @@
 
     salvar();
     renderizar();
+
+    mostrarToast(`✅ ${tipo === 'diag' ? 'Diagnóstico' : 'Revisão'} → ${prox.mecanico} (${prox.horario})`);
+  }
+
+  // === UNDO ===
+  function pushUndo(descricao, mecanico, horario, estadoAnterior, estadoNovo) {
+    undoStack.push({
+      descricao,
+      mecanico,
+      horario,
+      estadoAnterior,
+      estadoNovo,
+      idAnterior: state.ids[mecanico] ? state.ids[mecanico][horario] || null : null
+    });
+    // Manter no máximo 20 entradas
+    if (undoStack.length > 20) undoStack.shift();
+  }
+
+  function desfazer() {
+    if (undoStack.length === 0) {
+      mostrarToastSimples("Nada para desfazer");
+      return;
+    }
+    const acao = undoStack.pop();
+    const { mecanico, horario, estadoAnterior, estadoNovo, idAnterior } = acao;
+
+    // Reverter contagem acumulada
+    if (estadoNovo) {
+      state.acumulado[mecanico][estadoNovo] = Math.max(0, state.acumulado[mecanico][estadoNovo] - 1);
+    }
+    if (estadoAnterior) {
+      state.acumulado[mecanico][estadoAnterior] += 1;
+    }
+
+    state.grade[mecanico][horario] = estadoAnterior;
+
+    // Restaurar ID anterior
+    if (idAnterior) {
+      state.ids[mecanico][horario] = idAnterior;
+    } else if (state.ids[mecanico]) {
+      delete state.ids[mecanico][horario];
+    }
+
+    salvar();
+    renderizar();
+    mostrarToastSimples(`↩ Desfeito: ${acao.descricao}`);
+  }
+
+  // === TOAST ===
+  function mostrarToast(mensagem) {
+    const container = document.getElementById("toastContainer");
+    // Limpar toasts existentes
+    container.innerHTML = "";
+    clearTimeout(toastTimeout);
+
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.innerHTML = `
+      <span>${mensagem}</span>
+      <button class="btn-undo" onclick="desfazer()">↩ Desfazer</button>
+    `;
+    container.appendChild(toast);
+
+    toastTimeout = setTimeout(() => {
+      toast.classList.add("toast-out");
+      setTimeout(() => container.innerHTML = "", 300);
+    }, 5000);
+  }
+
+  function mostrarToastSimples(mensagem) {
+    const container = document.getElementById("toastContainer");
+    container.innerHTML = "";
+    clearTimeout(toastTimeout);
+
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.textContent = mensagem;
+    container.appendChild(toast);
+
+    toastTimeout = setTimeout(() => {
+      toast.classList.add("toast-out");
+      setTimeout(() => container.innerHTML = "", 300);
+    }, 3000);
   }
 
   // Permite clicar na célula individual para ajuste manual rápido
@@ -433,16 +896,27 @@
     const atual = state.grade[mecanico][horario];
     let novo = null;
 
+    pushUndo(
+      `${mecanico} (${horario}): ${atual || 'Livre'} → ${atual === null ? 'Diag' : atual === 'diag' ? 'Rev' : 'Livre'}`,
+      mecanico, horario, atual, null // estadoNovo será definido abaixo
+    );
+
     if (atual === null) {
       novo = 'diag';
       state.acumulado[mecanico].diag += 1;
+      // Corrigir o estadoNovo no undoStack
+      undoStack[undoStack.length - 1].estadoNovo = 'diag';
     } else if (atual === 'diag') {
       novo = 'rev';
       state.acumulado[mecanico].diag = Math.max(0, state.acumulado[mecanico].diag - 1);
       state.acumulado[mecanico].rev += 1;
+      undoStack[undoStack.length - 1].estadoNovo = 'rev';
     } else if (atual === 'rev') {
       novo = null;
       state.acumulado[mecanico].rev = Math.max(0, state.acumulado[mecanico].rev - 1);
+      // Limpar ID ao liberar
+      if (state.ids[mecanico]) delete state.ids[mecanico][horario];
+      undoStack[undoStack.length - 1].estadoNovo = null;
     }
 
     state.grade[mecanico][horario] = novo;
@@ -452,11 +926,195 @@
     renderizar();
   }
 
+  // Clique direito (ou long press) → limpar slot direto para "Livre"
+  function limparSlot(e, mecanico, horario) {
+    e.preventDefault();
+    const atual = state.grade[mecanico][horario];
+    if (atual === null) return; // Já livre, nada a fazer
+
+    pushUndo(
+      `${mecanico} (${horario}): ${atual === 'diag' ? 'Diag' : 'Rev'} → Livre`,
+      mecanico, horario, atual, null
+    );
+
+    state.acumulado[mecanico][atual] = Math.max(0, state.acumulado[mecanico][atual] - 1);
+    state.grade[mecanico][horario] = null;
+    if (state.ids[mecanico]) delete state.ids[mecanico][horario];
+    state.acumulado[mecanico].lastOrder = Date.now();
+
+    salvar();
+    renderizar();
+    mostrarToastSimples(`🗑 ${mecanico} (${horario}) liberado`);
+  }
+
+  // === TOGGLE PRESENÇA ===
+  function togglePresenca(mecanico) {
+    state.presenca[mecanico] = !state.presenca[mecanico];
+    salvar();
+    renderizar();
+    const status = state.presenca[mecanico] ? '🟢 Presente' : '⚪ Folga';
+    mostrarToastSimples(`${mecanico}: ${status}`);
+  }
+
+  // === MODAL DE IDENTIFICAÇÃO ===
+  function abrirModalId(mecanico, horario) {
+    const status = state.grade[mecanico][horario];
+    if (!status) return; // Só permite identificar slots ocupados
+
+    modalTarget = { mecanico, horario };
+    const tipo = status === 'diag' ? 'Diagnóstico' : 'Revisão';
+    document.getElementById("modalTitle").textContent = `${mecanico} — ${horario} (${tipo})`;
+    
+    const idAtual = (state.ids[mecanico] && state.ids[mecanico][horario]) || "";
+    document.getElementById("modalInput").value = idAtual;
+    document.getElementById("btnModalClear").style.display = idAtual ? "inline-block" : "none";
+
+    document.getElementById("modalOverlay").classList.add("active");
+    setTimeout(() => document.getElementById("modalInput").focus(), 100);
+  }
+
+  function fecharModal() {
+    document.getElementById("modalOverlay").classList.remove("active");
+    modalTarget = null;
+  }
+
+  function modalSalvar() {
+    if (!modalTarget) return;
+    const valor = document.getElementById("modalInput").value.trim();
+    if (!state.ids[modalTarget.mecanico]) state.ids[modalTarget.mecanico] = {};
+    
+    if (valor) {
+      state.ids[modalTarget.mecanico][modalTarget.horario] = valor;
+    } else {
+      delete state.ids[modalTarget.mecanico][modalTarget.horario];
+    }
+    
+    salvar();
+    renderizar();
+    fecharModal();
+  }
+
+  function modalLimpar() {
+    if (!modalTarget) return;
+    if (state.ids[modalTarget.mecanico]) {
+      delete state.ids[modalTarget.mecanico][modalTarget.horario];
+    }
+    salvar();
+    renderizar();
+    fecharModal();
+  }
+
+  // === COPIAR ESCALA PARA WHATSAPP ===
+  function copiarEscala() {
+    const hoje = new Date();
+    const dataFormatada = hoje.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    
+    let texto = `📅 *Escala Oficina — ${dataFormatada}*\n\n`;
+
+    MECANICOS.forEach(nome => {
+      if (state.presenca[nome] === false) {
+        texto += `• ~${nome}~ _(folga)_\n`;
+        return;
+      }
+
+      const slots = HORARIOS.map(hora => {
+        const status = state.grade[nome][hora];
+        const id = (state.ids[nome] && state.ids[nome][hora]) ? ` (${state.ids[nome][hora]})` : "";
+        if (status === 'diag') return `${hora.replace(':00','')}h Diag${id}`;
+        if (status === 'rev') return `${hora.replace(':00','')}h Rev${id}`;
+        return `${hora.replace(':00','')}h Livre`;
+      }).join(' │ ');
+
+      texto += `• *${nome}*: ${slots}\n`;
+    });
+
+    navigator.clipboard.writeText(texto).then(() => {
+      const btn = document.getElementById("btnCopiar");
+      btn.classList.add("copied");
+      btn.textContent = "✅ Copiado!";
+      setTimeout(() => {
+        btn.classList.remove("copied");
+        btn.textContent = "📋 Copiar p/ WhatsApp";
+      }, 2000);
+    }).catch(() => {
+      // Fallback para navegadores sem Clipboard API
+      const textarea = document.createElement("textarea");
+      textarea.value = texto;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      mostrarToastSimples("📋 Escala copiada!");
+    });
+  }
+
+  // === FULLSCREEN / MODO TV ===
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => {
+        document.body.classList.add("fullscreen-mode");
+      }).catch(() => {
+        // Fallback se Fullscreen API não suportada
+        document.body.classList.toggle("fullscreen-mode");
+      });
+    } else {
+      document.exitFullscreen();
+      document.body.classList.remove("fullscreen-mode");
+    }
+  }
+
+  document.addEventListener("fullscreenchange", () => {
+    if (!document.fullscreenElement) {
+      document.body.classList.remove("fullscreen-mode");
+    }
+  });
+
+  // === ATALHOS DE TECLADO ===
+  document.addEventListener("keydown", (e) => {
+    // Ignorar se estiver digitando em input
+    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+
+    const key = e.key.toLowerCase();
+
+    if (key === 'd') {
+      e.preventDefault();
+      agendarAuto('diag');
+    } else if (key === 'r') {
+      e.preventDefault();
+      agendarAuto('rev');
+    } else if (key === 'z') {
+      e.preventDefault();
+      desfazer();
+    }
+  });
+
+  // Fechar modal com ESC
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && document.getElementById("modalOverlay").classList.contains("active")) {
+      fecharModal();
+    }
+  });
+
+  // Fechar modal clicando fora
+  document.getElementById("modalOverlay").addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) fecharModal();
+  });
+
+  // Enter no modal = salvar
+  document.getElementById("modalInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      modalSalvar();
+    }
+  });
+
   function limparGrade() {
     if (!confirm("Deseja limpar apenas a grade de hoje? (Os totais acumulados serão preservados para o rodízio continuar justo)")) return;
     MECANICOS.forEach(nome => {
       state.grade[nome] = { "08:00": null, "10:00": null, "14:00": null, "16:00": null };
+      state.ids[nome] = {};
     });
+    undoStack = [];
     salvar();
     renderizar();
   }
@@ -466,13 +1124,15 @@
     MECANICOS.forEach(nome => {
       state.grade[nome] = { "08:00": null, "10:00": null, "14:00": null, "16:00": null };
       state.acumulado[nome] = { diag: 0, rev: 0, lastOrder: 0 };
+      state.ids[nome] = {};
     });
+    undoStack = [];
     salvar();
     renderizar();
   }
 
   function renderizar() {
-    // 1. Atualizar previews dos botões
+    // 1. Calcular próximos para destaque visual
     const nextDiag = encontrarProximo('diag');
     const nextRev = encontrarProximo('rev');
 
@@ -489,9 +1149,12 @@
     tbody.innerHTML = "";
 
     let totalOcupados = 0;
+    const totalSlots = MECANICOS.filter(n => state.presenca[n] !== false).length * 4;
 
     MECANICOS.forEach(mecanico => {
       const tr = document.createElement("tr");
+      const ausente = state.presenca[mecanico] === false;
+      if (ausente) tr.classList.add("mecanico-ausente");
 
       let diagDia = 0;
       let revDia = 0;
@@ -514,19 +1177,48 @@
           totalOcupados++;
         }
 
+        // Verificar se este slot é o próximo destino
+        let highlightClass = "";
+        if (!ausente && status === null) {
+          if (nextDiag && nextDiag.mecanico === mecanico && nextDiag.horario === hora) {
+            highlightClass = " next-diag";
+          }
+          if (nextRev && nextRev.mecanico === mecanico && nextRev.horario === hora) {
+            highlightClass += " next-rev";
+          }
+        }
+
+        // ID opcional
+        const slotId = (state.ids[mecanico] && state.ids[mecanico][hora]) || "";
+        const idHtml = slotId ? `<span class="slot-id">${slotId}</span>` : "";
+
+        // Eventos: clique esquerdo = alternar, clique direito = limpar, duplo clique = editar ID
         slotsHtml += `
           <td class="slot-cell">
-            <span class="slot-badge ${cssClass}" onclick="alternarSlot('${mecanico}', '${hora}')">
+            <span class="slot-badge ${cssClass}${highlightClass}" 
+                  onclick="alternarSlot('${mecanico}', '${hora}')"
+                  oncontextmenu="limparSlot(event, '${mecanico}', '${hora}')"
+                  ondblclick="event.stopPropagation(); abrirModalId('${mecanico}', '${hora}')">
               ${label}
+              ${idHtml}
             </span>
           </td>
         `;
       });
 
       const totalDia = diagDia + revDia;
+      const presencaClass = ausente ? "ausente" : "presente";
+      const nomeClass = ausente ? "mecanico-nome ausente-text" : "mecanico-nome";
 
       tr.innerHTML = `
-        <td class="mecanico-col">${mecanico}</td>
+        <td class="mecanico-col">
+          <div class="mecanico-info">
+            <span class="toggle-presenca ${presencaClass}" 
+                  onclick="togglePresenca('${mecanico}')" 
+                  title="${ausente ? 'Marcar como presente' : 'Marcar como folga/ausente'}"></span>
+            <span class="${nomeClass}">${mecanico}</span>
+          </div>
+        </td>
         ${slotsHtml}
         <td><span class="pill-count pill-diag">${diagDia}</span></td>
         <td><span class="pill-count pill-rev">${revDia}</span></td>
@@ -536,7 +1228,7 @@
       tbody.appendChild(tr);
     });
 
-    document.getElementById("occupancyBadge").innerText = `${totalOcupados} / 24 horários ocupados`;
+    document.getElementById("occupancyBadge").innerText = `${totalOcupados} / ${totalSlots} horários ocupados`;
   }
 
   inicializar();
