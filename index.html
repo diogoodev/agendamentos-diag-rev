@@ -699,6 +699,15 @@
       MECANICOS.forEach(nome => {
         if (state.presenca[nome] === undefined) state.presenca[nome] = true;
         if (!state.ids[nome]) state.ids[nome] = {};
+        // Migrar lastOrder → lastDiagOrder + lastRevOrder
+        if (state.acumulado[nome] && state.acumulado[nome].lastOrder !== undefined) {
+          const old = state.acumulado[nome].lastOrder;
+          if (state.acumulado[nome].lastDiagOrder === undefined) state.acumulado[nome].lastDiagOrder = old;
+          if (state.acumulado[nome].lastRevOrder === undefined) state.acumulado[nome].lastRevOrder = old;
+          delete state.acumulado[nome].lastOrder;
+        }
+        if (state.acumulado[nome] && state.acumulado[nome].lastDiagOrder === undefined) state.acumulado[nome].lastDiagOrder = 0;
+        if (state.acumulado[nome] && state.acumulado[nome].lastRevOrder === undefined) state.acumulado[nome].lastRevOrder = 0;
       });
     } else {
       // Tentar migrar dados da v2
@@ -714,14 +723,14 @@
             state.grade[nome] = { "08:00": null, "10:00": null, "14:00": null, "16:00": null };
           }
           if (!state.acumulado[nome]) {
-            state.acumulado[nome] = { diag: 0, rev: 0, lastOrder: 0 };
+            state.acumulado[nome] = { diag: 0, rev: 0, lastDiagOrder: 0, lastRevOrder: 0 };
           }
         });
         state.dataGrade = getHoje();
       } else {
         MECANICOS.forEach(nome => {
           state.grade[nome] = { "08:00": null, "10:00": null, "14:00": null, "16:00": null };
-          state.acumulado[nome] = { diag: 0, rev: 0, lastOrder: 0 };
+          state.acumulado[nome] = { diag: 0, rev: 0, lastDiagOrder: 0, lastRevOrder: 0 };
           state.presenca[nome] = true;
           state.ids[nome] = {};
         });
@@ -758,8 +767,24 @@
     localStorage.setItem("oficina_grade_v3", JSON.stringify(state));
   }
 
+  // Conta quantos serviços o mecânico já tem na grade de HOJE
+  function contarServicosHoje(mecanico) {
+    let total = 0;
+    for (const hora of HORARIOS) {
+      if (state.grade[mecanico][hora] !== null) total++;
+    }
+    return total;
+  }
+
   // Encontra o melhor horário e mecânico para o serviço (pula ausentes)
+  // Algoritmo com 4 critérios em cascata:
+  //   1º Menor carga HOJE (evita concentrar tudo num mecânico no dia)
+  //   2º Menor contagem do TIPO solicitado (equilíbrio por tipo)
+  //   3º Menor carga TOTAL histórica (equilíbrio geral)
+  //   4º FIFO separado por tipo (desempate justo sem contaminação cruzada)
   function encontrarProximo(tipo) {
+    const lastOrderKey = tipo === 'diag' ? 'lastDiagOrder' : 'lastRevOrder';
+
     for (const hora of HORARIOS) {
       const mecanicosLivresNessaHora = MECANICOS.filter(nome =>
         state.grade[nome][hora] === null && state.presenca[nome] !== false
@@ -767,12 +792,23 @@
 
       if (mecanicosLivresNessaHora.length > 0) {
         mecanicosLivresNessaHora.sort((a, b) => {
-          const countA = state.acumulado[a][tipo];
-          const countB = state.acumulado[b][tipo];
-          if (countA !== countB) return countA - countB;
-          
-          // Desempate: quem foi agendado há mais tempo
-          return state.acumulado[a].lastOrder - state.acumulado[b].lastOrder;
+          // 1º Quem tem menos serviços HOJE
+          const diaA = contarServicosHoje(a);
+          const diaB = contarServicosHoje(b);
+          if (diaA !== diaB) return diaA - diaB;
+
+          // 2º Quem tem menos do TIPO solicitado (histórico)
+          const tipoA = state.acumulado[a][tipo];
+          const tipoB = state.acumulado[b][tipo];
+          if (tipoA !== tipoB) return tipoA - tipoB;
+
+          // 3º Quem tem menos TOTAL (diag + rev) no histórico
+          const totalA = state.acumulado[a].diag + state.acumulado[a].rev;
+          const totalB = state.acumulado[b].diag + state.acumulado[b].rev;
+          if (totalA !== totalB) return totalA - totalB;
+
+          // 4º FIFO separado por tipo (quem foi agendado há mais tempo nesse tipo)
+          return (state.acumulado[a][lastOrderKey] || 0) - (state.acumulado[b][lastOrderKey] || 0);
         });
 
         return {
@@ -802,7 +838,8 @@
 
     state.grade[prox.mecanico][prox.horario] = tipo;
     state.acumulado[prox.mecanico][tipo] += 1;
-    state.acumulado[prox.mecanico].lastOrder = Date.now();
+    const lastKey = tipo === 'diag' ? 'lastDiagOrder' : 'lastRevOrder';
+    state.acumulado[prox.mecanico][lastKey] = Date.now();
 
     salvar();
     renderizar();
@@ -920,7 +957,12 @@
     }
 
     state.grade[mecanico][horario] = novo;
-    state.acumulado[mecanico].lastOrder = Date.now();
+    // Atualizar FIFO do tipo que foi atribuído
+    if (novo === 'diag') {
+      state.acumulado[mecanico].lastDiagOrder = Date.now();
+    } else if (novo === 'rev') {
+      state.acumulado[mecanico].lastRevOrder = Date.now();
+    }
 
     salvar();
     renderizar();
@@ -940,7 +982,7 @@
     state.acumulado[mecanico][atual] = Math.max(0, state.acumulado[mecanico][atual] - 1);
     state.grade[mecanico][horario] = null;
     if (state.ids[mecanico]) delete state.ids[mecanico][horario];
-    state.acumulado[mecanico].lastOrder = Date.now();
+    // Não atualiza FIFO ao limpar — preserva a ordem original
 
     salvar();
     renderizar();
@@ -1123,7 +1165,7 @@
     if (!confirm("ATENÇÃO: Deseja zerar TODAS as contagens acumuladas e limpar a grade?")) return;
     MECANICOS.forEach(nome => {
       state.grade[nome] = { "08:00": null, "10:00": null, "14:00": null, "16:00": null };
-      state.acumulado[nome] = { diag: 0, rev: 0, lastOrder: 0 };
+      state.acumulado[nome] = { diag: 0, rev: 0, lastDiagOrder: 0, lastRevOrder: 0 };
       state.ids[nome] = {};
     });
     undoStack = [];
