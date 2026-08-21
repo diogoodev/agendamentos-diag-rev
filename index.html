@@ -3,19 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rodízio de Oficina - Diagnóstico e Revisão</title>
+  <title>Rodízio de Oficina - Horários Automáticos</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --border: #334155;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --diag-color: #f59e0b;
-      --rev-color: #10b981;
-      --danger: #ef4444;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      
+      --diag-color: #b45309;
+      --diag-bg: #fef3c7;
+      --diag-border: #fde68a;
+      
+      --rev-color: #047857;
+      --rev-bg: #d1fae5;
+      --rev-border: #a7f3d0;
+      
+      --free-bg: #f1f5f9;
+      --free-color: #94a3b8;
+      
+      --primary: #2563eb;
+      --danger: #dc2626;
     }
 
     * {
@@ -35,26 +44,34 @@
 
     .container {
       width: 100%;
-      max-width: 900px;
+      max-width: 980px;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 20px;
     }
 
     header {
-      text-align: center;
-      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     header h1 {
-      font-size: 1.75rem;
+      font-size: 1.6rem;
       font-weight: 700;
+      color: var(--text);
     }
 
-    header p {
+    .capacity-badge {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
       color: var(--text-muted);
-      font-size: 0.9rem;
-      margin-top: 4px;
     }
 
     .card {
@@ -62,150 +79,216 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     }
 
-    .card h2 {
-      font-size: 1.15rem;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    /* Formulário de Ação */
-    .action-grid {
+    /* BOTOES DE AÇÃO RAPIDA */
+    .actions-container {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 16px;
     }
 
-    @media (max-width: 600px) {
-      .action-grid {
+    @media (max-width: 640px) {
+      .actions-container {
         grid-template-columns: 1fr;
       }
     }
 
-    .action-box {
-      border: 1px dashed var(--border);
-      border-radius: 8px;
+    .action-card {
+      border: 2px solid;
+      border-radius: 10px;
       padding: 16px;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
       gap: 12px;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.15s ease;
+      background: #fff;
     }
 
-    .action-box.diag { border-color: var(--diag-color); }
-    .action-box.rev { border-color: var(--rev-color); }
+    .action-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
 
-    .badge-next {
+    .action-card:active {
+      transform: scale(0.99);
+    }
+
+    .action-card.diag {
+      border-color: var(--diag-border);
+      background: #fffdf7;
+    }
+
+    .action-card.rev {
+      border-color: var(--rev-border);
+      background: #f7fdfa;
+    }
+
+    .action-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .action-title h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .action-card.diag h2 { color: var(--diag-color); }
+    .action-card.rev h2 { color: var(--rev-color); }
+
+    .btn-action {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-diag { background: #d97706; }
+    .btn-rev { background: #059669; }
+
+    .next-preview {
       font-size: 0.85rem;
       color: var(--text-muted);
     }
 
-    .badge-next strong {
+    .next-preview strong {
       color: var(--text);
-      font-size: 1rem;
     }
 
-    .btn {
-      padding: 10px 16px;
-      border-radius: 6px;
-      border: none;
-      font-weight: 600;
-      font-size: 0.95rem;
-      cursor: pointer;
-      transition: opacity 0.2s;
+    /* GRADE DE HORARIOS */
+    .table-container {
+      overflow-x: auto;
     }
 
-    .btn:hover { opacity: 0.9; }
-
-    .btn-diag {
-      background-color: var(--diag-color);
-      color: #000;
-    }
-
-    .btn-rev {
-      background-color: var(--rev-color);
-      color: #000;
-    }
-
-    .input-group {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .input-group input {
-      flex: 1;
-      padding: 8px 12px;
-      background: #0f172a;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: #fff;
-    }
-
-    /* Tabela */
     table {
       width: 100%;
       border-collapse: collapse;
-      text-align: left;
+      text-align: center;
+      min-width: 600px;
     }
 
     th, td {
-      padding: 12px 14px;
+      padding: 12px 10px;
       border-bottom: 1px solid var(--border);
     }
 
     th {
-      color: var(--text-muted);
-      font-weight: 600;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
     }
 
-    .num-pill {
+    th.mecanico-col, td.mecanico-col {
+      text-align: left;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* SLOTS */
+    .slot-cell {
+      padding: 6px;
+    }
+
+    .slot-badge {
+      display: block;
+      width: 100%;
+      padding: 8px 4px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .slot-badge.livre {
+      background: var(--free-bg);
+      color: var(--free-color);
+      border-color: #e2e8f0;
+    }
+
+    .slot-badge.diag {
+      background: var(--diag-bg);
+      color: var(--diag-color);
+      border-color: var(--diag-border);
+    }
+
+    .slot-badge.rev {
+      background: var(--rev-bg);
+      color: var(--rev-color);
+      border-color: var(--rev-border);
+    }
+
+    .slot-badge:hover {
+      filter: brightness(0.95);
+    }
+
+    .pill-count {
       display: inline-block;
-      min-width: 28px;
-      text-align: center;
-      padding: 2px 8px;
-      border-radius: 12px;
+      min-width: 24px;
+      padding: 2px 6px;
+      border-radius: 10px;
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
     }
 
-    .pill-diag { background: rgba(245, 158, 11, 0.15); color: var(--diag-color); }
-    .pill-rev { background: rgba(16, 185, 129, 0.15); color: var(--rev-color); }
-    .pill-total { background: #334155; color: #fff; }
+    .pill-diag { background: var(--diag-bg); color: var(--diag-color); }
+    .pill-rev { background: var(--rev-bg); color: var(--rev-color); }
+    .pill-total { background: #e2e8f0; color: #334155; }
 
-    /* Histórico */
-    .history-list {
-      list-style: none;
-      max-height: 200px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .history-item {
+    /* CONTROLES INFERIORES */
+    .footer-actions {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #0f172a;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 0.85rem;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 8px;
     }
 
-    .btn-reset {
-      background: transparent;
-      border: 1px solid var(--danger);
-      color: var(--danger);
-      padding: 4px 8px;
-      font-size: 0.75rem;
-      border-radius: 4px;
+    .btn-secondary {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
       cursor: pointer;
+    }
+
+    .btn-secondary:hover { background: #e2e8f0; }
+
+    .btn-danger {
+      background: #fee2e2;
+      border: 1px solid #fca5a5;
+      color: var(--danger);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .btn-danger:hover { background: #fecaca; }
+
+    .instruction-hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
     }
   </style>
 </head>
@@ -213,60 +296,64 @@
 
 <div class="container">
   <header>
-    <h1>Rodízio de Agendamento da Oficina</h1>
-    <p>Distribuição automática e equilibrada de Diagnósticos e Revisões</p>
+    <div>
+      <h1>Rodízio de Oficina</h1>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">4 horários diários por mecânico (08h, 10h, 14h, 16h)</p>
+    </div>
+    <div class="capacity-badge" id="occupancyBadge">0 / 24 horários ocupados</div>
   </header>
 
-  <div class="card">
-    <h2>Novo Agendamento</h2>
-    <div class="input-group">
-      <input type="text" id="osInfo" placeholder="Identificação da O.S. ou Placa (Opcional)">
+  <!-- BOTÕES DE 1 CLIQUE -->
+  <div class="actions-container">
+    <div class="action-card diag" onclick="agendarAuto('diag')">
+      <div class="action-title">
+        <h2>+ Diagnóstico</h2>
+        <span class="next-preview" id="previewDiag">Próximo: calculando...</span>
+      </div>
+      <button class="btn-action btn-diag">Atribuir Próximo Diagnóstico</button>
     </div>
-    <div class="action-grid">
-      <div class="action-box diag">
-        <div>
-          <h3>Diagnóstico</h3>
-          <p class="badge-next">Próximo da fila: <strong id="nextDiagName">-</strong></p>
-        </div>
-        <button class="btn btn-diag" onclick="agendar('diag')">Atribuir Diagnóstico</button>
-      </div>
 
-      <div class="action-box rev">
-        <div>
-          <h3>Revisão</h3>
-          <p class="badge-next">Próximo da fila: <strong id="nextRevName">-</strong></p>
-        </div>
-        <button class="btn btn-rev" onclick="agendar('rev')">Atribuir Revisão</button>
+    <div class="action-card rev" onclick="agendarAuto('rev')">
+      <div class="action-title">
+        <h2>+ Revisão</h2>
+        <span class="next-preview" id="previewRev">Próximo: calculando...</span>
       </div>
+      <button class="btn-action btn-rev">Atribuir Próxima Revisão</button>
     </div>
   </div>
 
+  <!-- GRADE DIÁRIA -->
   <div class="card">
-    <h2>
-      Quadro de Contagem
-      <button class="btn-reset" onclick="zerarContadores()">Zerar Contagens</button>
-    </h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Mecânico</th>
-          <th style="text-align: center;">Diagnósticos</th>
-          <th style="text-align: center;">Revisões</th>
-          <th style="text-align: center;">Total Geral</th>
-        </tr>
-      </thead>
-      <tbody id="mecanicosTbody"></tbody>
-    </table>
-  </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th class="mecanico-col">Mecânico</th>
+            <th style="width: 14%;">08:00</th>
+            <th style="width: 14%;">10:00</th>
+            <th style="width: 14%;">14:00</th>
+            <th style="width: 14%;">16:00</th>
+            <th style="width: 10%;">Diag</th>
+            <th style="width: 10%;">Rev</th>
+            <th style="width: 10%;">Total</th>
+          </tr>
+        </thead>
+        <tbody id="gridTbody"></tbody>
+      </table>
+    </div>
 
-  <div class="card">
-    <h2>Histórico Recente</h2>
-    <ul class="history-list" id="historyList"></ul>
+    <div class="footer-actions">
+      <span class="instruction-hint">💡 Dica: você também pode clicar direto no horário de qualquer mecânico para alternar manualmente (Livre → Diag → Rev).</span>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-secondary" onclick="limparGrade()">Limpar Grade do Dia</button>
+        <button class="btn-danger" onclick="zerarHistoricoCompleto()">Zerar Histórico Geral</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-  const MECANICOS_INICIAIS = [
+  const MECANICOS = [
     "Orlando",
     "Francisco",
     "Cristiano",
@@ -275,127 +362,181 @@
     "Tassio"
   ];
 
+  const HORARIOS = ["08:00", "10:00", "14:00", "16:00"];
+
   let state = {
-    mecanicos: [],
-    historico: []
+    grade: {},
+    acumulado: {} // Mantém contagem histórica geral para garantir justiça a longo prazo
   };
 
   function inicializar() {
-    const salvo = localStorage.getItem("oficina_rodizio_state");
+    const salvo = localStorage.getItem("oficina_grade_v2");
     if (salvo) {
       state = JSON.parse(salvo);
     } else {
-      state.mecanicos = MECANICOS_INICIAIS.map((nome, index) => ({
-        id: index + 1,
-        nome: nome,
-        diagCount: 0,
-        revCount: 0,
-        lastDiagOrder: 0,
-        lastRevOrder: 0
-      }));
+      MECANICOS.forEach(nome => {
+        state.grade[nome] = { "08:00": null, "10:00": null, "14:00": null, "16:00": null };
+        state.acumulado[nome] = { diag: 0, rev: 0, lastOrder: 0 };
+      });
       salvar();
     }
     renderizar();
   }
 
   function salvar() {
-    localStorage.setItem("oficina_rodizio_state", JSON.stringify(state));
+    localStorage.setItem("oficina_grade_v2", JSON.stringify(state));
   }
 
-  function getProximo(tipo) {
-    const campoContagem = tipo === 'diag' ? 'diagCount' : 'revCount';
-    const campoOrdem = tipo === 'diag' ? 'lastDiagOrder' : 'lastRevOrder';
+  // Encontra o melhor horário e mecânico para o serviço
+  function encontrarProximo(tipo) {
+    // 1. Encontrar o primeiro horário que tenha pelo menos 1 mecânico livre
+    for (const hora of HORARIOS) {
+      const mecanicosLivresNessaHora = MECANICOS.filter(nome => state.grade[nome][hora] === null);
 
-    // Ordena: 1º menor contagem daquele serviço, 2º quem foi agendado há mais tempo
-    const ordenados = [...state.mecanicos].sort((a, b) => {
-      if (a[campoContagem] !== b[campoContagem]) {
-        return a[campoContagem] - b[campoContagem];
+      if (mecanicosLivresNessaHora.length > 0) {
+        // 2. Entre os mecânicos livres nesse horário, escolher quem tem MENOS serviços do tipo
+        mecanicosLivresNessaHora.sort((a, b) => {
+          const countA = state.acumulado[a][tipo];
+          const countB = state.acumulado[b][tipo];
+          if (countA !== countB) return countA - countB;
+          
+          // Desempate: quem foi agendado há mais tempo
+          return state.acumulado[a].lastOrder - state.acumulado[b].lastOrder;
+        });
+
+        return {
+          mecanico: mecanicosLivresNessaHora[0],
+          horario: hora
+        };
       }
-      return a[campoOrdem] - b[campoOrdem];
-    });
-
-    return ordenados[0];
+    }
+    return null; // Todos os 24 horários preenchidos
   }
 
-  function agendar(tipo) {
-    const inputOS = document.getElementById("osInfo");
-    const osTexto = inputOS.value.trim();
-    const escolhido = getProximo(tipo);
-    const orderTimestamp = Date.now();
-
-    if (tipo === 'diag') {
-      escolhido.diagCount += 1;
-      escolhido.lastDiagOrder = orderTimestamp;
-    } else {
-      escolhido.revCount += 1;
-      escolhido.lastRevOrder = orderTimestamp;
+  function agendarAuto(tipo) {
+    const prox = encontrarProximo(tipo);
+    if (!prox) {
+      alert("Todos os 24 horários do dia já estão preenchidos!");
+      return;
     }
 
-    state.historico.unshift({
-      id: Date.now(),
-      mecanico: escolhido.nome,
-      tipo: tipo === 'diag' ? 'Diagnóstico' : 'Revisão',
-      info: osTexto || 'Sem identificação',
-      hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    });
+    state.grade[prox.mecanico][prox.horario] = tipo;
+    state.acumulado[prox.mecanico][tipo] += 1;
+    state.acumulado[prox.mecanico].lastOrder = Date.now();
 
-    inputOS.value = "";
     salvar();
     renderizar();
   }
 
-  function zerarContadores() {
-    if (!confirm("Tem certeza que deseja zerar todas as contagens e o histórico?")) return;
-    
-    state.mecanicos.forEach(m => {
-      m.diagCount = 0;
-      m.revCount = 0;
-      m.lastDiagOrder = 0;
-      m.lastRevOrder = 0;
+  // Permite clicar na célula individual para ajuste manual rápido
+  function alternarSlot(mecanico, horario) {
+    const atual = state.grade[mecanico][horario];
+    let novo = null;
+
+    if (atual === null) {
+      novo = 'diag';
+      state.acumulado[mecanico].diag += 1;
+    } else if (atual === 'diag') {
+      novo = 'rev';
+      state.acumulado[mecanico].diag = Math.max(0, state.acumulado[mecanico].diag - 1);
+      state.acumulado[mecanico].rev += 1;
+    } else if (atual === 'rev') {
+      novo = null;
+      state.acumulado[mecanico].rev = Math.max(0, state.acumulado[mecanico].rev - 1);
+    }
+
+    state.grade[mecanico][horario] = novo;
+    state.acumulado[mecanico].lastOrder = Date.now();
+
+    salvar();
+    renderizar();
+  }
+
+  function limparGrade() {
+    if (!confirm("Deseja limpar apenas a grade de hoje? (Os totais acumulados serão preservados para o rodízio continuar justo)")) return;
+    MECANICOS.forEach(nome => {
+      state.grade[nome] = { "08:00": null, "10:00": null, "14:00": null, "16:00": null };
     });
-    state.historico = [];
+    salvar();
+    renderizar();
+  }
+
+  function zerarHistoricoCompleto() {
+    if (!confirm("ATENÇÃO: Deseja zerar TODAS as contagens acumuladas e limpar a grade?")) return;
+    MECANICOS.forEach(nome => {
+      state.grade[nome] = { "08:00": null, "10:00": null, "14:00": null, "16:00": null };
+      state.acumulado[nome] = { diag: 0, rev: 0, lastOrder: 0 };
+    });
     salvar();
     renderizar();
   }
 
   function renderizar() {
-    // 1. Atualizar indicadores dos próximos da fila
-    const proxDiag = getProximo('diag');
-    const proxRev = getProximo('rev');
-    document.getElementById("nextDiagName").innerText = proxDiag ? proxDiag.nome : "-";
-    document.getElementById("nextRevName").innerText = proxRev ? proxRev.nome : "-";
+    // 1. Atualizar previews dos botões
+    const nextDiag = encontrarProximo('diag');
+    const nextRev = encontrarProximo('rev');
 
-    // 2. Tabela de Mecânicos
-    const tbody = document.getElementById("mecanicosTbody");
+    document.getElementById("previewDiag").innerHTML = nextDiag 
+      ? `Próximo: <strong>${nextDiag.mecanico} (${nextDiag.horario})</strong>`
+      : `<strong>Grade cheia</strong>`;
+
+    document.getElementById("previewRev").innerHTML = nextRev 
+      ? `Próximo: <strong>${nextRev.mecanico} (${nextRev.horario})</strong>`
+      : `<strong>Grade cheia</strong>`;
+
+    // 2. Renderizar Grade
+    const tbody = document.getElementById("gridTbody");
     tbody.innerHTML = "";
-    state.mecanicos.forEach(m => {
-      const total = m.diagCount + m.revCount;
+
+    let totalOcupados = 0;
+
+    MECANICOS.forEach(mecanico => {
       const tr = document.createElement("tr");
+
+      let diagDia = 0;
+      let revDia = 0;
+
+      let slotsHtml = "";
+      HORARIOS.forEach(hora => {
+        const status = state.grade[mecanico][hora];
+        let label = "Livre";
+        let cssClass = "livre";
+
+        if (status === 'diag') {
+          label = "Diagnóstico";
+          cssClass = "diag";
+          diagDia++;
+          totalOcupados++;
+        } else if (status === 'rev') {
+          label = "Revisão";
+          cssClass = "rev";
+          revDia++;
+          totalOcupados++;
+        }
+
+        slotsHtml += `
+          <td class="slot-cell">
+            <span class="slot-badge ${cssClass}" onclick="alternarSlot('${mecanico}', '${hora}')">
+              ${label}
+            </span>
+          </td>
+        `;
+      });
+
+      const totalDia = diagDia + revDia;
+
       tr.innerHTML = `
-        <td><strong>${m.nome}</strong></td>
-        <td style="text-align: center;"><span class="num-pill pill-diag">${m.diagCount}</span></td>
-        <td style="text-align: center;"><span class="num-pill pill-rev">${m.revCount}</span></td>
-        <td style="text-align: center;"><span class="num-pill pill-total">${total}</span></td>
+        <td class="mecanico-col">${mecanico}</td>
+        ${slotsHtml}
+        <td><span class="pill-count pill-diag">${diagDia}</span></td>
+        <td><span class="pill-count pill-rev">${revDia}</span></td>
+        <td><span class="pill-count pill-total">${totalDia}/4</span></td>
       `;
+
       tbody.appendChild(tr);
     });
 
-    // 3. Histórico
-    const list = document.getElementById("historyList");
-    list.innerHTML = "";
-    if (state.historico.length === 0) {
-      list.innerHTML = `<li style="color: var(--text-muted); font-size: 0.85rem;">Nenhum agendamento registrado ainda.</li>`;
-    } else {
-      state.historico.slice(0, 15).forEach(item => {
-        const li = document.createElement("li");
-        li.className = "history-item";
-        li.innerHTML = `
-          <span><strong>${item.mecanico}</strong> recebeu <em>${item.tipo}</em> (${item.info})</span>
-          <span style="color: var(--text-muted);">${item.hora}</span>
-        `;
-        list.appendChild(li);
-      });
-    }
+    document.getElementById("occupancyBadge").innerText = `${totalOcupados} / 24 horários ocupados`;
   }
 
   inicializar();
